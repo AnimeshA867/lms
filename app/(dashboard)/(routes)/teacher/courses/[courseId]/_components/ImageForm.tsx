@@ -107,7 +107,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
             onChange={(url) => {
               if (url) {
                 console.log("Image uploaded successfully:", url);
-                onSubmit({ imageUrl: url }); // Pass the URL to onSubmit
+                onSubmit({ imageUrl: url });
               }
             }}
           />
