@@ -52,7 +52,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
     setIsEditting((prev) => !prev);
   };
 
-  const onSubmit = async (value: z.infer<typeof formSchema>) => {
+  const onSubmit = async (imageUrl: z.infer<typeof formSchema>) => {
     try {
       console.log(imageUrl);
       await axios.patch(`/api/courses/${courseId}`, imageUrl);
@@ -95,7 +95,6 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
                 className="object-cover rounded-md"
                 src={initialData.imageUrl}
               />
-              asdfasd
             </>
           </div>
         )
