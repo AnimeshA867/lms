@@ -3,44 +3,43 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
-interface DescriptionFormProps {
+interface PriceFormProps {
   initialData: {
-    description: string | null;
+    price: number | null;
   };
   courseId: string;
 }
 
 const formSchema = z.object({
-  description: z.string().min(1, {
-    message: "Title is required",
-  }),
+  price: z
+    .number({ invalid_type_error: "Price is required" })
+    .min(0, { message: "Price must be at least 0" }),
 });
 
-const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
+const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
   const router = useRouter();
-  const [isEditting, setIsEditting] = useState(false);
+  const [isEditting, setIsEditting] = useState(initialData.price === null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: initialData.description || "",
+      price: initialData.price ?? 0,
     },
   });
 
@@ -55,26 +54,37 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await axios.patch(`/api/courses/${courseId}`, data);
-      toast.success("Course description updated successfully");
+      await axios.patch(`/api/courses/${courseId}`, { price: data.price });
+      toast.success("Course price updated successfully");
       toggleEdit();
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update course description");
-      console.error("Failed to update course description:", error);
+      toast.error("Failed to update course price");
+      console.error("Failed to update course price:", error);
     }
   };
 
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Description
+        Course price
         <Button variant={"ghost"} onClick={toggleEdit}>
           {isEditting ? <>Cancel</> : <Pencil className="h-4 w-4" />}
         </Button>
       </div>
 
-      {!isEditting && <p className="text-sm mt-2">{initialData.description}</p>}
+      {!isEditting && (
+        <p
+          className={cn(
+            "text-sm mt-2",
+            !initialData.price && "text-slate-500 italic"
+          )}
+        >
+          {initialData.price !== null && initialData.price !== undefined
+            ? formatPrice(initialData.price)
+            : "No price selected"}
+        </p>
+      )}
       {isEditting && (
         <Form {...form}>
           <form
@@ -83,16 +93,25 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
           >
             <FormField
               control={form.control}
-              name="description"
+              name="price"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      rows={6}
-                      className="resize-none"
-                      placeholder="e.g. 'This course covers advanced topics...'"
+                    <Input
                       {...field}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? ""
+                            : parseFloat(e.target.value)
+                        )
+                      }
+                      value={field.value === 0 ? "" : field.value}
                       disabled={isSubmitting}
+                      placeholder="Set a price for your course."
+                      type="number"
+                      step="0.01"
+                      min="0"
                     />
                   </FormControl>
                 </FormItem>
@@ -108,4 +127,4 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   );
 };
 
-export default DescriptionForm;
+export default PriceForm;

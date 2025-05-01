@@ -19,28 +19,35 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
+import { Combobox } from "../../../../../../../components/ui/combobox";
+import { cn } from "@/lib/utils";
 
-interface DescriptionFormProps {
+interface CategoryFormProps {
   initialData: {
-    description: string | null;
+    categoryId: string | null;
   };
   courseId: string;
+  options: { label: string; value: string }[];
 }
 
 const formSchema = z.object({
-  description: z.string().min(1, {
+  categoryId: z.string().min(1, {
     message: "Title is required",
   }),
 });
 
-const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
+const CategoryForm = ({
+  initialData,
+  courseId,
+  options,
+}: CategoryFormProps) => {
   const router = useRouter();
-  const [isEditting, setIsEditting] = useState(false);
+  const [isEditting, setIsEditting] = useState(true);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: initialData.description || "",
+      categoryId: initialData.categoryId || "",
     },
   });
 
@@ -56,25 +63,38 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       await axios.patch(`/api/courses/${courseId}`, data);
-      toast.success("Course description updated successfully");
+      toast.success("Course category updated successfully");
       toggleEdit();
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update course description");
-      console.error("Failed to update course description:", error);
+      toast.error("Failed to update course category");
+      console.error("Failed to update course category:", error);
     }
   };
+
+  const selectedOption = options.find(
+    (option) => option.value === initialData.categoryId
+  );
 
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Description
+        Course category
         <Button variant={"ghost"} onClick={toggleEdit}>
           {isEditting ? <>Cancel</> : <Pencil className="h-4 w-4" />}
         </Button>
       </div>
 
-      {!isEditting && <p className="text-sm mt-2">{initialData.description}</p>}
+      {!isEditting && (
+        <p
+          className={cn(
+            "text-sm mt-2",
+            !initialData.categoryId && "text-slate-500 italic"
+          )}
+        >
+          {selectedOption?.label || "No category selected"}
+        </p>
+      )}
       {isEditting && (
         <Form {...form}>
           <form
@@ -83,16 +103,16 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
           >
             <FormField
               control={form.control}
-              name="description"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      rows={6}
-                      className="resize-none"
-                      placeholder="e.g. 'This course covers advanced topics...'"
-                      {...field}
-                      disabled={isSubmitting}
+                    <Combobox
+                      value={field.value}
+                      options={options}
+                      onChange={(value) => {
+                        field.onChange(value);
+                      }}
                     />
                   </FormControl>
                 </FormItem>
@@ -108,4 +128,4 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   );
 };
 
-export default DescriptionForm;
+export default CategoryForm;

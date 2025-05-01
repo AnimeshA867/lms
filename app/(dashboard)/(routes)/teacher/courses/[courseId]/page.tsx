@@ -1,12 +1,20 @@
 import { IconBadge } from "@/components/icon-badge";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { LayoutDashboard } from "lucide-react";
+import {
+  CircleDollarSign,
+  File,
+  LayoutDashboard,
+  ListCheck,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import TitleForm from "./_components/TitleForm";
 import DescriptionForm from "./_components/DescriptionForm";
 import ImageForm from "./_components/ImageForm";
-
+import CategoryForm from "./_components/CategoryForm";
+import PriceForm from "./_components/PriceForm";
+import AttachmentForm from "./_components/AttachmentForm";
+import ChapterForm from "./_components/ChapterForm";
 const Page = async ({ params }: { params: { courseId: string } }) => {
   const { courseId } = await params;
 
@@ -14,7 +22,26 @@ const Page = async ({ params }: { params: { courseId: string } }) => {
     where: {
       id: courseId,
     },
+    include: {
+      chapter: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      attachments: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
   });
+
+  const category = await db.category.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+
   if (!course) {
     return redirect("/");
   }
@@ -32,6 +59,7 @@ const Page = async ({ params }: { params: { courseId: string } }) => {
     course.imageUrl,
     course.price,
     course.categoryId,
+    course.chapter.some((chapter) => chapter.isPublished),
   ];
 
   const totalFields = requiredFields.length;
@@ -48,7 +76,7 @@ const Page = async ({ params }: { params: { courseId: string } }) => {
           </span>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:grid-cols-3 xl:grid-cols-4 mt-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:grid-cols-2  mt-16">
         <div>
           <div className="flex items-center gap-x-2">
             <IconBadge icon={LayoutDashboard} />
@@ -57,6 +85,37 @@ const Page = async ({ params }: { params: { courseId: string } }) => {
           <TitleForm initialData={course} courseId={course.id} />
           <DescriptionForm initialData={course} courseId={course.id} />
           <ImageForm initialData={course} courseId={courseId} />
+          <CategoryForm
+            initialData={course}
+            courseId={courseId}
+            options={category.map((category) => ({
+              value: category.id,
+              label: category.name,
+            }))}
+          />
+        </div>
+        <div className="space-y-6 ">
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={ListCheck} />
+              <h2 className="text-xl">Course Chapters</h2>
+            </div>
+            <ChapterForm initialData={course} courseId={course.id} />
+          </div>
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={CircleDollarSign} />
+              <h2 className="text-xl">Sell your course</h2>
+            </div>
+            <PriceForm initialData={course} courseId={course.id} />
+          </div>
+          <div>
+            <div className="flex items-center gap-x-2 overflow-x-hidden">
+              <IconBadge icon={File} />
+              <h2 className="text-xl">Resources & Attachments</h2>
+            </div>
+            <AttachmentForm initialData={course} courseId={course.id} />
+          </div>
         </div>
       </div>
     </div>

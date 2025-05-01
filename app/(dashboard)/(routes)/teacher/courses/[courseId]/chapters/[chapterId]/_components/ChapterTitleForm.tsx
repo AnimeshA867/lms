@@ -9,7 +9,6 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { Pencil } from "lucide-react";
@@ -20,27 +19,32 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
-interface DescriptionFormProps {
+interface ChapterTitleFormProps {
   initialData: {
-    description: string | null;
+    title: string;
   };
+  chapterId: string;
   courseId: string;
 }
 
 const formSchema = z.object({
-  description: z.string().min(1, {
+  title: z.string().min(1, {
     message: "Title is required",
   }),
 });
 
-const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
+const ChapterTitleForm = ({
+  initialData,
+  chapterId,
+  courseId,
+}: ChapterTitleFormProps) => {
   const router = useRouter();
   const [isEditting, setIsEditting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      description: initialData.description || "",
+      title: initialData.title,
     },
   });
 
@@ -48,33 +52,33 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const toggleEdit = () => {
     if (isEditting) {
-      form.reset();
+      form.reset(); // Reset form to initial values
     }
     setIsEditting((prev) => !prev);
   };
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await axios.patch(`/api/courses/${courseId}`, data);
-      toast.success("Course description updated successfully");
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, data);
+      toast.success("Chapter title updated successfully");
       toggleEdit();
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update course description");
-      console.error("Failed to update course description:", error);
+      toast.error("Failed to update chapter title");
+      console.error("Failed to update chapter title:", error);
     }
   };
 
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Description
+        Chapter Title
         <Button variant={"ghost"} onClick={toggleEdit}>
           {isEditting ? <>Cancel</> : <Pencil className="h-4 w-4" />}
         </Button>
       </div>
 
-      {!isEditting && <p className="text-sm mt-2">{initialData.description}</p>}
+      {!isEditting && <p className="text-sm mt-2">{initialData.title}</p>}
       {isEditting && (
         <Form {...form}>
           <form
@@ -83,14 +87,12 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
           >
             <FormField
               control={form.control}
-              name="description"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      rows={6}
-                      className="resize-none"
-                      placeholder="e.g. 'This course covers advanced topics...'"
+                    <Input
+                      placeholder="e.g. 'Introduction to React'"
                       {...field}
                       disabled={isSubmitting}
                     />
@@ -108,4 +110,4 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   );
 };
 
-export default DescriptionForm;
+export default ChapterTitleForm;

@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: lms
+      MYSQL_USER: animesh
+      MYSQL_PASSWORD: samaya
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      # MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+
+  nextjs:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    environment:
+      DATABASE_URL: mysql://animesh:samaya@localhost:3307/lms

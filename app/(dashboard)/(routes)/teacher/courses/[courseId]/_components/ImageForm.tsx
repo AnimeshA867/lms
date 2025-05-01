@@ -103,7 +103,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
         <div>
           <FileUpload
             endpoint="courseImage"
-            onChange={(url) => {
+            onChange={({ url }) => {
               if (url) {
                 console.log("Image uploaded successfully:", url);
                 onSubmit({ imageUrl: url });

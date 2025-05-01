@@ -1,4 +1,6 @@
 "use client";
+import { Editor } from "@/components/editor";
+import { Preview } from "@/components/preview";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -8,9 +10,8 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Chapter } from "@prisma/client";
 import axios from "axios";
 import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,11 +21,10 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import * as z from "zod";
 
-interface DescriptionFormProps {
-  initialData: {
-    description: string | null;
-  };
+interface ChapterDescriptionFormProps {
+  initialData: Chapter;
   courseId: string;
+  chapterId: string;
 }
 
 const formSchema = z.object({
@@ -33,7 +33,11 @@ const formSchema = z.object({
   }),
 });
 
-const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
+const ChapterDescriptionForm = ({
+  initialData,
+  courseId,
+  chapterId,
+}: ChapterDescriptionFormProps) => {
   const router = useRouter();
   const [isEditting, setIsEditting] = useState(false);
 
@@ -55,26 +59,32 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      await axios.patch(`/api/courses/${courseId}`, data);
-      toast.success("Course description updated successfully");
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, data);
+      toast.success("Chapter description updated successfully");
       toggleEdit();
       router.refresh();
     } catch (error) {
-      toast.error("Failed to update course description");
-      console.error("Failed to update course description:", error);
+      toast.error("Failed to update Chapter description");
+      console.error("Failed to update Chapter description:", error);
     }
   };
 
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Course Description
+        Chapter Description
         <Button variant={"ghost"} onClick={toggleEdit}>
           {isEditting ? <>Cancel</> : <Pencil className="h-4 w-4" />}
         </Button>
       </div>
 
-      {!isEditting && <p className="text-sm mt-2">{initialData.description}</p>}
+      {!isEditting && (
+        <div className="text-sm mt-2">
+          {initialData.description && (
+            <Preview value={initialData?.description} />
+          )}
+        </div>
+      )}
       {isEditting && (
         <Form {...form}>
           <form
@@ -87,13 +97,7 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      rows={6}
-                      className="resize-none"
-                      placeholder="e.g. 'This course covers advanced topics...'"
-                      {...field}
-                      disabled={isSubmitting}
-                    />
+                    <Editor {...field} />
                   </FormControl>
                 </FormItem>
               )}
@@ -108,4 +112,4 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
   );
 };
 
-export default DescriptionForm;
+export default ChapterDescriptionForm;
