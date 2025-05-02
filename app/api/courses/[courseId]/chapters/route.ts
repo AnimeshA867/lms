@@ -30,7 +30,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const lastChapter = await db.chapter.findFirst({
+    const lastChapter = await db.chapter.findMany({
       where: {
         courseId,
       },
@@ -39,7 +39,14 @@ export async function POST(
       },
     });
 
-    const newPosition = lastChapter ? lastChapter.position + 1 : 1;
+    let newPosition;
+    if (lastChapter.length === 0) {
+      newPosition = 0;
+    } else if (lastChapter[0].position === 0) {
+      newPosition = 0;
+    } else {
+      newPosition = lastChapter[0].position + 1;
+    }
 
     const chaper = await db.chapter.create({
       data: {

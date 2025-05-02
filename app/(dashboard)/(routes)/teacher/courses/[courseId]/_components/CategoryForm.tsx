@@ -42,7 +42,7 @@ const CategoryForm = ({
   options,
 }: CategoryFormProps) => {
   const router = useRouter();
-  const [isEditting, setIsEditting] = useState(true);
+  const [isEditting, setIsEditting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

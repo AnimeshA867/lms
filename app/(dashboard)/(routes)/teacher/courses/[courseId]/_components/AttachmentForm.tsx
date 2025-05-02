@@ -196,7 +196,13 @@ const AttachmentForm = ({ initialData, courseId }: AttachmentFormProps) => {
               >
                 <div className="flex items-center w-full gap-2 relative p-2">
                   <File className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <p className="text-xs line-clamp-1">{att.name}</p>
+                  <a
+                    className="text-xs line-clamp-1 hover:underline"
+                    target="_blank"
+                    href={att.url}
+                  >
+                    {att.name}
+                  </a>
                   {deletingId === att.id ? (
                     <div className="h-8 ">
                       <Loader className="h-4 w-4 animate-spin" />
@@ -215,7 +221,7 @@ const AttachmentForm = ({ initialData, courseId }: AttachmentFormProps) => {
                 </div>
                 <div
                   className={cn(
-                    "absolute top-0 -right-[101%] w-full h-full flex items-center justify-center bg-sky-100 rounded-md gap-4 shadow-md transition-all duration-300 border-sky-400 border",
+                    "absolute top-0 -right-[101%] w-full h-full flex items-center justify-center bg-sky-100 rounded-md gap-4 shadow-md transition-all duration-300 border-sky-200 border",
                     deletingId === att.id && "right-0"
                   )}
                 >
