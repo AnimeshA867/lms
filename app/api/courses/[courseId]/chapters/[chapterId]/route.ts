@@ -65,7 +65,7 @@ export async function PATCH(
       }
 
       // Destructure videoUrl from data (videoUrl should be present here).
-      const { videoUrl } = await data;
+      const { videoUrl } = data;
       // Create a new asset using the Mux client.
       const asset = await client.video.assets.create({
         inputs: [{ url: videoUrl }],
@@ -178,16 +178,17 @@ export async function DELETE(
         position: "asc",
       },
     });
-    for (let i = 0; i < chapters.length; i++) {
-      await db.chapter.update({
+    const updateOperations = chapters.map((chapter, index) => {
+      return db.chapter.update({
         where: {
-          id: chapters[i].id,
+          id: chapter.id,
         },
         data: {
-          position: i + 1,
+          position: index + 1,
         },
       });
-    }
+    });
+    await Promise.all(updateOperations);
     const deletedChapter = await db.chapter.delete({
       where: {
         id: chapterId,
